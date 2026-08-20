@@ -1,10 +1,17 @@
-<script lang="ts">
-	import { onMount } from 'svelte';
 
-	type SizeHints = Record<string, number>;
+<script lang="ts">
+	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
+	import { formatBytes, formatElapsed } from '$lib/download/format';
+	import {
+		getSizeHint,
+		loadSizeHints,
+		persistSizeHint,
+		resolveDownloadUrl,
+		type SizeHints
+	} from '$lib/download/size-hints';
 	type DownloadMode = 'idle' | 'downloading' | 'paused' | 'complete' | 'error';
 
-	const storageKey = 'download-progress-bar:size-hints';
 	const defaultDownloadUrl = '/api/download?size=26214400';
 	const remoteSampleUrl = 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg';
 
@@ -33,71 +40,17 @@
 	let activeRequestId = 0;
 
 	onMount(() => {
-		if (typeof window === 'undefined') {
+		if (!browser) {
 			return;
 		}
 
-		try {
-			const storedHints = window.localStorage.getItem(storageKey);
-			if (storedHints) {
-				sizeHints = JSON.parse(storedHints) as SizeHints;
-			}
-		} catch {
-			sizeHints = {};
-		}
+		sizeHints = loadSizeHints(window.localStorage);
 
-		rememberedBytes = getSizeHint(downloadUrl);
+		rememberedBytes = getSizeHint(sizeHints, downloadUrl, window.location.href);
 	});
 
-	$: if (typeof window !== 'undefined' && downloadMode !== 'downloading') {
-		rememberedBytes = getSizeHint(downloadUrl);
-	}
-
-	function resolveDownloadUrl(value: string) {
-		if (typeof window === 'undefined') {
-			return value;
-		}
-
-		return new URL(value, window.location.href).href;
-	}
-
-	function getSizeHint(value: string) {
-		return sizeHints[resolveDownloadUrl(value)] ?? null;
-	}
-
-	function persistSizeHint(value: string, bytes: number) {
-		if (typeof window === 'undefined') {
-			return;
-		}
-
-		const key = resolveDownloadUrl(value);
-		sizeHints = {
-			...sizeHints,
-			[key]: bytes
-		};
-
-		window.localStorage.setItem(storageKey, JSON.stringify(sizeHints));
-	}
-
-	function formatBytes(bytes: number) {
-		if (!Number.isFinite(bytes) || bytes < 1024) {
-			return `${Math.max(0, Math.round(bytes))} B`;
-		}
-
-		const units = ['KB', 'MB', 'GB', 'TB'];
-		let value = bytes / 1024;
-		let unitIndex = 0;
-
-		while (value >= 1024 && unitIndex < units.length - 1) {
-			value /= 1024;
-			unitIndex += 1;
-		}
-
-		return `${value.toFixed(value >= 100 ? 0 : 1)} ${units[unitIndex]}`;
-	}
-
-	function formatElapsed(milliseconds: number) {
-		return `${(milliseconds / 1000).toFixed(1)}s`;
+	$: if (browser && downloadMode !== 'downloading') {
+		rememberedBytes = getSizeHint(sizeHints, downloadUrl, window.location.href);
 	}
 
 	function updateProgress() {
@@ -134,7 +87,7 @@
 		downloadUrl = defaultDownloadUrl;
 		currentSourceLabel = 'Local demo file';
 		if (downloadMode !== 'downloading') {
-			rememberedBytes = getSizeHint(downloadUrl);
+			rememberedBytes = getSizeHint(sizeHints, downloadUrl, window.location.href);
 		}
 	}
 
@@ -142,7 +95,7 @@
 		downloadUrl = remoteSampleUrl;
 		currentSourceLabel = 'Remote sample file';
 		if (downloadMode !== 'downloading') {
-			rememberedBytes = getSizeHint(downloadUrl);
+			rememberedBytes = getSizeHint(sizeHints, downloadUrl, window.location.href);
 		}
 	}
 
@@ -219,9 +172,9 @@
 		}
 
 		usedEstimatedSize = false;
-		rememberedBytes = getSizeHint(downloadUrl);
+		rememberedBytes = getSizeHint(sizeHints, downloadUrl, window.location.href);
 
-		const resolvedUrl = resolveDownloadUrl(downloadUrl);
+		const resolvedUrl = resolveDownloadUrl(downloadUrl, window.location.href);
 		const offset = resume ? downloadedBytes : 0;
 		const requestId = ++activeRequestId;
 		abortController = new AbortController();
@@ -317,7 +270,13 @@
 			}
 
 			const finalSize = downloadedBytes;
-			persistSizeHint(downloadUrl, finalSize);
+			sizeHints = persistSizeHint(
+				sizeHints,
+				downloadUrl,
+				finalSize,
+				window.localStorage,
+				window.location.href
+			);
 			rememberedBytes = finalSize;
 			lastSuccessfulSize = finalSize;
 			totalBytes = finalSize;
