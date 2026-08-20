@@ -701,11 +701,11 @@
 		color: #ffffff;
 		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 		pointer-events: none;
-		transition: opacity 600ms ease-out;
+		transition: opacity 300ms ease-out;
 	}
 
 	.progress-percentage.fade-out {
-		animation: fadeOutPercentage 600ms ease-out 3s forwards;
+		animation: fadeOutPercentage 300ms ease-out 3s forwards;
 	}
 
 	@keyframes fadeOutPercentage {
