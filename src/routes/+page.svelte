@@ -115,9 +115,7 @@
 		}
 	}
 
-	function isSlowDemoActive() {
-		return useSlowDemo;
-	}
+	const isSlowDemoActive = $derived(useSlowDemo);
 
 	function setRemoteSource() {
 		sourceMode = 'remote';
@@ -404,7 +402,7 @@
 			<div class="source-actions">
 				<button class="secondary" type="button" on:click={setLocalSource}>Use local demo</button>
 				<button class="secondary" type="button" on:click={toggleSlowDemo}>
-					{isSlowDemoActive() ? 'Slow demo: on' : 'Slow demo: off'}
+					{isSlowDemoActive ? 'Slow demo: on' : 'Slow demo: off'}
 				</button>
 				<button class="secondary" type="button" on:click={setRemoteSource}>Use remote sample</button>
 			</div>
