@@ -54,12 +54,18 @@ export function createDownloadStream(
 	end = size - 1,
 	chunkDelayMs = 0
 ) {
+	let isClosed = false;
+
 	return new ReadableStream<Uint8Array>({
 		async start(controller) {
 			let sent = start;
 			const chunk = new Uint8Array(Math.min(chunkSize, size));
 
 			const push = () => {
+				if (isClosed) {
+					return;
+				}
+
 				while (sent <= end) {
 					const nextSize = Math.min(chunkSize, end - sent + 1);
 					controller.enqueue(nextSize === chunk.length ? chunk : chunk.slice(0, nextSize));
@@ -74,10 +80,14 @@ export function createDownloadStream(
 					}
 				}
 
+				isClosed = true;
 				controller.close();
 			};
 
 			push();
+		},
+		cancel() {
+			isClosed = true;
 		}
 	});
 }
