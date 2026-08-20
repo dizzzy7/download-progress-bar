@@ -435,6 +435,9 @@
 					class="progress-fill"
 					style={`width: ${progressValue}%`}
 				></div>
+				<div class="progress-percentage">
+					{totalBytes ? `${Math.round(progressValue)}%` : '—'}
+				</div>
 			</div>
 
 			<div class="progress-meta">
@@ -684,6 +687,18 @@
 
 	.progress-fill.paused {
 		animation-play-state: paused;
+	}
+
+	.progress-percentage {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: #ffffff;
+		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+		pointer-events: none;
 	}
 
 	.progress-meta {
