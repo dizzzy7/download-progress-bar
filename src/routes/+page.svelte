@@ -13,9 +13,12 @@
 	type DownloadMode = 'idle' | 'downloading' | 'paused' | 'complete' | 'error';
 
 	const defaultDownloadUrl = '/api/download?size=26214400';
+	const slowDownloadUrl = '/api/download?size=26214400&delay=40';
 	const remoteSampleUrl = 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg';
 
 	let downloadUrl = defaultDownloadUrl;
+	let useSlowDemo = false;
+	let sourceMode: 'local' | 'remote' = 'local';
 	let downloadMode: DownloadMode = 'idle';
 	let currentSourceLabel = 'Local demo file';
 	let statusMessage = 'Ready to download';
@@ -79,19 +82,43 @@
 		pausedMilliseconds = 0;
 	}
 
+	function refreshLocalSourceLabel() {
+		currentSourceLabel = useSlowDemo ? 'Local demo file (slow)' : 'Local demo file';
+	}
+
+	function refreshLocalDemoUrl() {
+		downloadUrl = useSlowDemo ? slowDownloadUrl : defaultDownloadUrl;
+		refreshLocalSourceLabel();
+	}
+
 	function updateElapsed(now = performance.now()) {
 		elapsedSeconds = (now - sessionStartedAt - pausedMilliseconds) / 1000;
 	}
 
 	function setLocalSource() {
-		downloadUrl = defaultDownloadUrl;
-		currentSourceLabel = 'Local demo file';
+		sourceMode = 'local';
+		refreshLocalDemoUrl();
 		if (downloadMode !== 'downloading') {
 			rememberedBytes = getSizeHint(sizeHints, downloadUrl, window.location.href);
 		}
 	}
 
+	function toggleSlowDemo() {
+		useSlowDemo = !useSlowDemo;
+		if (sourceMode === 'local') {
+			refreshLocalDemoUrl();
+			if (downloadMode !== 'downloading') {
+				rememberedBytes = getSizeHint(sizeHints, downloadUrl, window.location.href);
+			}
+		}
+	}
+
+	function isSlowDemoActive() {
+		return useSlowDemo;
+	}
+
 	function setRemoteSource() {
+		sourceMode = 'remote';
 		downloadUrl = remoteSampleUrl;
 		currentSourceLabel = 'Remote sample file';
 		if (downloadMode !== 'downloading') {
@@ -374,6 +401,9 @@
 
 			<div class="source-actions">
 				<button class="secondary" type="button" on:click={setLocalSource}>Use local demo</button>
+				<button class="secondary" type="button" on:click={toggleSlowDemo}>
+					{isSlowDemoActive() ? 'Slow demo: on' : 'Slow demo: off'}
+				</button>
 				<button class="secondary" type="button" on:click={setRemoteSource}>Use remote sample</button>
 			</div>
 		</div>
@@ -385,7 +415,7 @@
 
 		<p class="helper">
 			Remote URLs must allow CORS, and pause/resume works best when the source supports byte-range
-			requests.
+			requests. The slow demo intentionally drips out data so the progress bar is easy to watch.
 		</p>
 
 		<div class="actions">

@@ -1,6 +1,10 @@
 const defaultSize = 25 * 1024 * 1024;
 const chunkSize = 64 * 1024;
 
+function delay(ms: number) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function parseDownloadSize(value: string | null) {
 	if (!value) {
 		return defaultSize;
@@ -44,9 +48,14 @@ export function parseDownloadRange(rangeHeader: string | null, size: number) {
 	};
 }
 
-export function createDownloadStream(size: number, start: number, end = size - 1) {
+export function createDownloadStream(
+	size: number,
+	start: number,
+	end = size - 1,
+	chunkDelayMs = 0
+) {
 	return new ReadableStream<Uint8Array>({
-		start(controller) {
+		async start(controller) {
 			let sent = start;
 			const chunk = new Uint8Array(Math.min(chunkSize, size));
 
@@ -56,7 +65,11 @@ export function createDownloadStream(size: number, start: number, end = size - 1
 					controller.enqueue(nextSize === chunk.length ? chunk : chunk.slice(0, nextSize));
 					sent += nextSize;
 					if (sent <= end) {
-						queueMicrotask(push);
+						if (chunkDelayMs > 0) {
+							delay(chunkDelayMs).then(push);
+						} else {
+							queueMicrotask(push);
+						}
 						return;
 					}
 				}
