@@ -16,31 +16,31 @@
 	const slowDownloadUrl = '/api/download?size=26214400&delay=40';
 	const remoteSampleUrl = 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg';
 
-	let downloadUrl = defaultDownloadUrl;
-	let useSlowDemo = false;
-	let sourceMode: 'local' | 'remote' = 'local';
-	let downloadMode: DownloadMode = 'idle';
-	let currentSourceLabel = 'Local demo file';
-	let statusMessage = 'Ready to download';
-	let errorMessage = '';
-	let downloadedBytes = 0;
-	let totalBytes: number | null = null;
-	let progressValue = 0;
-	let speedBytesPerSecond = 0;
-	let elapsedSeconds = 0;
-	let rememberedBytes: number | null = null;
-	let usedEstimatedSize = false;
-	let lastSuccessfulSize: number | null = null;
-	let supportsRange = false;
-	let canResume = false;
-	let abortController: AbortController | null = null;
-	let sizeHints: SizeHints = {};
-	let shouldPause = false;
-	let shouldReset = false;
-	let sessionStartedAt = 0;
-	let pauseStartedAt = 0;
-	let pausedMilliseconds = 0;
-	let activeRequestId = 0;
+	let downloadUrl = $state(defaultDownloadUrl);
+	let useSlowDemo = $state(false);
+	let sourceMode = $state<'local' | 'remote'>('local');
+	let downloadMode = $state<DownloadMode>('idle');
+	let currentSourceLabel = $state('Local demo file');
+	let statusMessage = $state('Ready to download');
+	let errorMessage = $state('');
+	let downloadedBytes = $state(0);
+	let totalBytes = $state<number | null>(null);
+	let progressValue = $state(0);
+	let speedBytesPerSecond = $state(0);
+	let elapsedSeconds = $state(0);
+	let rememberedBytes = $state<number | null>(null);
+	let usedEstimatedSize = $state(false);
+	let lastSuccessfulSize = $state<number | null>(null);
+	let supportsRange = $state(false);
+	let canResume = $state(false);
+	let abortController = $state<AbortController | null>(null);
+	let sizeHints = $state<SizeHints>({});
+	let shouldPause = $state(false);
+	let shouldReset = $state(false);
+	let sessionStartedAt = $state(0);
+	let pauseStartedAt = $state(0);
+	let pausedMilliseconds = $state(0);
+	let activeRequestId = $state(0);
 
 	onMount(() => {
 		if (!browser) {
@@ -400,11 +400,11 @@
 			</div>
 
 			<div class="source-actions">
-				<button class="secondary" type="button" on:click={setLocalSource}>Use local demo</button>
-				<button class="secondary" type="button" on:click={toggleSlowDemo}>
+				<button class="secondary" type="button" onclick={setLocalSource}>Use local demo</button>
+				<button class="secondary" type="button" onclick={toggleSlowDemo}>
 					{isSlowDemoActive ? 'Slow demo: on' : 'Slow demo: off'}
 				</button>
-				<button class="secondary" type="button" on:click={setRemoteSource}>Use remote sample</button>
+				<button class="secondary" type="button" onclick={setRemoteSource}>Use remote sample</button>
 			</div>
 		</div>
 
@@ -419,10 +419,10 @@
 		</p>
 
 		<div class="actions">
-			<button class="primary" type="button" on:click={togglePrimaryAction}>
+			<button class="primary" type="button" onclick={togglePrimaryAction}>
 				{primaryLabel()}
 			</button>
-			<button class="secondary" type="button" on:click={resetDownload}>
+			<button class="secondary" type="button" onclick={resetDownload}>
 				{secondaryLabel()}
 			</button>
 		</div>
