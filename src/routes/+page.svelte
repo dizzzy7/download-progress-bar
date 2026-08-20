@@ -269,6 +269,7 @@
 			const reader = response.body.getReader();
 			let lastTickAt = performance.now();
 			let lastDownloadedBytes = downloadedBytes;
+			let lastSpeedUpdateAt = performance.now();
 
 			while (true) {
 				const { done, value } = await reader.read();
@@ -281,11 +282,13 @@
 				const now = performance.now();
 				updateElapsed(now);
 
-				if (now > lastTickAt) {
+				// Update speed only every 500ms to avoid spiky values
+				if (now - lastSpeedUpdateAt >= 500) {
 					speedBytesPerSecond =
 						((downloadedBytes - lastDownloadedBytes) * 1000) / (now - lastTickAt);
 					lastTickAt = now;
 					lastDownloadedBytes = downloadedBytes;
+					lastSpeedUpdateAt = now;
 				}
 
 				updateProgress();
