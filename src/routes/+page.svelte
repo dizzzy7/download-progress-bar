@@ -435,9 +435,11 @@
 					class="progress-fill"
 					style={`width: ${progressValue}%`}
 				></div>
-				<div class="progress-percentage">
-					{totalBytes ? `${Math.round(progressValue)}%` : '—'}
-				</div>
+				{#if downloadMode !== 'idle'}
+					<div class:fade-out={downloadMode === 'complete'} class="progress-percentage">
+						{totalBytes ? `${Math.round(progressValue)}%` : '—'}
+					</div>
+				{/if}
 			</div>
 
 			<div class="progress-meta">
@@ -699,6 +701,20 @@
 		color: #ffffff;
 		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 		pointer-events: none;
+		transition: opacity 600ms ease-out;
+	}
+
+	.progress-percentage.fade-out {
+		animation: fadeOutPercentage 600ms ease-out 3s forwards;
+	}
+
+	@keyframes fadeOutPercentage {
+		from {
+			opacity: 1;
+		}
+		to {
+			opacity: 0;
+		}
 	}
 
 	.progress-meta {
