@@ -52,9 +52,11 @@
 		rememberedBytes = getSizeHint(sizeHints, downloadUrl, window.location.href);
 	});
 
-	$: if (browser && downloadMode !== 'downloading') {
-		rememberedBytes = getSizeHint(sizeHints, downloadUrl, window.location.href);
-	}
+	$effect(() => {
+		if (browser && downloadMode !== 'downloading') {
+			rememberedBytes = getSizeHint(sizeHints, downloadUrl, window.location.href);
+		}
+	});
 
 	function updateProgress() {
 		if (totalBytes && totalBytes > 0) {
